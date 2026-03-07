@@ -4,7 +4,7 @@ variable "aws_region" {
   default     = "ap-south-1"
 }
 
-variable "projec_name" {
+variable "project_name" {
   description = "name of the project"
   type        = string
   default     = "flask-eks-pipeline"
