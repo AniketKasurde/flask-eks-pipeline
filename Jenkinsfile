@@ -51,22 +51,22 @@ pipeline {
         }
 
         stage("Deploy to EKS") {
-            steps {
-                sh """
-                    aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+          steps {
+            sh """
+            aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
 
-                    kubectl apply -f k8s/namespace.yaml
+            kubectl apply -f k8s/namespace.yaml
 
-                    kubectl apply -f k8s/service.yaml
+            kubectl apply -f k8s/deployment.yaml
 
-                    kubectl set image deployment/flask-app \
-                        flask-app=${ECR_REPO}:${IMAGE_TAG} \
-                        -n flask-app
+            kubectl set image deployment/flask-app \
+                flask-app=${ECR_REPO}:${IMAGE_TAG} \
+                -n flask-app
 
-                    kubectl apply -f k8s/deployment.yaml
-                """
-            }
-        }
+            kubectl apply -f k8s/service.yaml
+        """
+    }
+}
 
         stage("Verify Rollout") {
             steps {
