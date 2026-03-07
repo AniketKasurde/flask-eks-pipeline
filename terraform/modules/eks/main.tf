@@ -1,4 +1,4 @@
-#IAM role for EKS control plane
+# IAM Role for EKS Control Plane
 resource "aws_iam_role" "eks_cluster" {
   name = "${var.project_name}-eks-cluster-role"
 
@@ -6,47 +6,47 @@ resource "aws_iam_role" "eks_cluster" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
         Effect = "Allow"
-        Sid    = ""
         Principal = {
           Service = "eks.amazonaws.com"
         }
-      },
+        Action = "sts:AssumeRole"
+      }
     ]
   })
 }
 
-#IAM role policy attachment for control Plane
 resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
   role       = aws_iam_role.eks_cluster.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
-#EKS cluster
+# EKS Cluster
 resource "aws_eks_cluster" "main" {
   name     = "${var.project_name}-cluster"
   role_arn = aws_iam_role.eks_cluster.arn
-  version  = 1.35
+  version  = "1.31"
 
   vpc_config {
-    subnet_ids              = var.private_subnet_ids
-    endpoint_private_access = true
+    subnet_ids              = concat(var.private_subnet_ids, var.public_subnet_ids)
     endpoint_public_access  = true
+    endpoint_private_access = true
   }
 
   access_config {
     authentication_mode = "API"
   }
 
-  depends_on = [aws_iam_role_policy_attachment.eks_cluster_policy]
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_policy
+  ]
 
   tags = {
     Name = "${var.project_name}-cluster"
   }
 }
 
-#IAM Role for EKS Worker Nodes
+# IAM Role for EKS Worker Nodes
 resource "aws_iam_role" "eks_nodes" {
   name = "${var.project_name}-eks-node-role"
 
@@ -54,18 +54,16 @@ resource "aws_iam_role" "eks_nodes" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
         Effect = "Allow"
-        Sid    = ""
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-      },
+        Action = "sts:AssumeRole"
+      }
     ]
   })
 }
 
-#IAM role policy attachment for worker nodes
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
   role       = aws_iam_role.eks_nodes.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
@@ -81,7 +79,7 @@ resource "aws_iam_role_policy_attachment" "eks_ecr_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
-#EKS Node Group
+# EKS Node Group
 resource "aws_eks_node_group" "main" {
   cluster_name    = aws_eks_cluster.main.name
   node_group_name = "${var.project_name}-workers"
@@ -106,63 +104,10 @@ resource "aws_eks_node_group" "main" {
   }
 }
 
-
-#IAM Role for Jenkins EC2 to access EKS
-resource "aws_iam_role" "jenkins" {
-  name = "${var.project_name}-jenkins-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-#ECR policy for Jenkins role
-resource "aws_iam_role_policy_attachment" "jenkins_ecr" {
-  role       = aws_iam_role.jenkins.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
-}
-
-#EKS custom inline policy for Jenkins role
-resource "aws_iam_role_policy" "jenkins_eks" {
-  name = "${var.project_name}-jenkins-eks-policy"
-  role = aws_iam_role.jenkins.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "eks:DescribeCluster",
-          "eks:ListClusters",
-          "eks:AccessKubernetesApi"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-#instance profile
-resource "aws_iam_instance_profile" "jenkins" {
-  name = "${var.project_name}-jenkins-profile"
-  role = aws_iam_role.jenkins.name
-}
-
-#EKS Access Entry for Jenkins
+# EKS Access Entry for Jenkins
 resource "aws_eks_access_entry" "jenkins" {
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = aws_iam_role.jenkins.arn
+  principal_arn = var.jenkins_role_arn
   type          = "STANDARD"
 
   depends_on = [aws_eks_cluster.main]
@@ -170,7 +115,7 @@ resource "aws_eks_access_entry" "jenkins" {
 
 resource "aws_eks_access_policy_association" "jenkins" {
   cluster_name  = aws_eks_cluster.main.name
-  principal_arn = aws_iam_role.jenkins.arn
+  principal_arn = var.jenkins_role_arn
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
 
   access_scope {
@@ -178,4 +123,15 @@ resource "aws_eks_access_policy_association" "jenkins" {
   }
 
   depends_on = [aws_eks_access_entry.jenkins]
+}
+
+# Allow Jenkins to reach EKS API privately on port 443
+resource "aws_security_group_rule" "jenkins_to_eks" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
+  source_security_group_id = var.jenkins_security_group_id
+  description              = "Allow Jenkins to reach EKS API privately"
 }

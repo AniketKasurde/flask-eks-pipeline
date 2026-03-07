@@ -1,4 +1,4 @@
-#seccurity group for Jenkins EC2
+# Security Group for Jenkins EC2
 resource "aws_security_group" "jenkins" {
   name        = "${var.project_name}-jenkins-sg"
   description = "Security group for Jenkins EC2"
@@ -33,19 +33,69 @@ resource "aws_security_group" "jenkins" {
   }
 }
 
-#Jenkins EC2
+# IAM Role for Jenkins EC2
+resource "aws_iam_role" "jenkins" {
+  name = "${var.project_name}-jenkins-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# ECR permissions for Jenkins
+resource "aws_iam_role_policy_attachment" "jenkins_ecr" {
+  role       = aws_iam_role.jenkins.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+}
+
+# EKS permissions for Jenkins
+resource "aws_iam_role_policy" "jenkins_eks" {
+  name = "${var.project_name}-jenkins-eks-policy"
+  role = aws_iam_role.jenkins.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:AccessKubernetesApi"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Instance profile
+resource "aws_iam_instance_profile" "jenkins" {
+  name = "${var.project_name}-jenkins-profile"
+  role = aws_iam_role.jenkins.name
+}
+
+# Jenkins EC2 Instance
 resource "aws_instance" "jenkins" {
   ami                    = "ami-019715e0d74f695be"
   instance_type          = "t3.small"
   subnet_id              = var.public_subnet_id
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.jenkins.id]
-  iam_instance_profile   = var.jenkins_instance_profile
+  iam_instance_profile   = aws_iam_instance_profile.jenkins.name
 
   user_data = file("${path.module}/userdata.sh")
 
   tags = {
     Name = "${var.project_name}-jenkins"
   }
-
 }
