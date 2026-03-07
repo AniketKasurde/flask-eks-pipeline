@@ -30,9 +30,9 @@ pipeline {
         stage("Run Tests") {
             steps {
                 sh """
-                    pip install -r tests/requirements-test.txt --break-system-packages -q
-                    pip install -r app/requirements.txt --break-system-packages -q
-                    pytest tests/ -v
+                    pip3 install -r tests/requirements-test.txt --break-system-packages -q
+                    pip3 install -r app/requirements.txt --break-system-packages -q
+                    python3 -m pytest tests/ -v
                 """
             }
         }
