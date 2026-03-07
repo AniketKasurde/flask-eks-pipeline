@@ -10,3 +10,7 @@ variable "project_name" {
   default     = "flask-eks-pipeline"
 }
 
+variable "key_name" {
+  description = "Jenkins EC2 key"
+  type        = string
+}
