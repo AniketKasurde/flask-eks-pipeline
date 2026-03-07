@@ -38,7 +38,7 @@ resource "aws_instance" "jenkins" {
   ami                    = ami-019715e0d74f695be
   instance_type          = t3.small
   subnet_id              = var.public_subnet_id
-  key_name               = "ci-cd-key"
+  key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.jenkins.id]
   iam_instance_profile   = var.jenkins_instance_profile
 
