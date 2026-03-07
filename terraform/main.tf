@@ -18,8 +18,8 @@ module "eks" {
 module "jenkins" {
   source                   = "./modules/jenkins"
   project_name             = var.project_name
-  vpc_id                   = module.networking.vpc_id
-  public_subnet_id         = module.networking.public_subnet_ids[0]
+  vpc_id                   = module.vpc.vpc_id
+  public_subnet_id         = module.vpc.public_subnet_ids[0]
   jenkins_instance_profile = module.eks.jenkins_instance_profile
   key_name                 = var.key_name
 }
