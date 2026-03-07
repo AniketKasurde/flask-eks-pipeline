@@ -7,15 +7,14 @@ echo "========== Starting user data script =========="
 
 # Update system
 apt-get update -y
-apt-get install -y curl unzip openjdk-21-jre fontconfig
+apt-get install -y curl unzip openjdk-21-jre fontconfig wget
 
 # Install Jenkins
-echo "Installing Jenkins..."
-curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | \
-  tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian-stable binary/" | \
-  tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
 apt-get update -y
 apt-get install -y jenkins
 systemctl enable jenkins
