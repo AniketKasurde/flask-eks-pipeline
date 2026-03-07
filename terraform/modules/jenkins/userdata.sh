@@ -7,7 +7,7 @@ echo "========== Starting user data script =========="
 
 # Update system
 apt-get update -y
-apt-get install -y curl unzip openjdk-21-jre fontconfig wget
+apt-get install -y curl unzip openjdk-21-jre fontconfig wget python3 python3-pip
 
 # Install Jenkins
 wget -O /etc/apt/keyrings/jenkins-keyring.asc \
