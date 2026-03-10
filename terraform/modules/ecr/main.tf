@@ -19,11 +19,10 @@ resource "aws_ecr_lifecycle_policy" "app" {
   "rules": [
     {
       "rulePriority": 1,
-      "description": "Expire images older than 10 days",
+      "description": "Keep last 10 images",
       "selection": {
-        "tagStatus": "untagged",
-        "countType": "sinceImagePushed",
-        "countUnit": "days",
+        "tagStatus": "tagged",
+        "countType": "imageCountMoreThan",
         "countNumber": 10
       },
       "action": {
