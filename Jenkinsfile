@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION   = "ap-south-1"
-        ECR_REPO     = "760022212905.dkr.ecr.ap-south-1.amazonaws.com/flask-eks-pipeline"
+        ECR_REPO     = "<YOUR ACCOUNT ID>.dkr.ecr.ap-south-1.amazonaws.com/flask-eks-pipeline"
         CLUSTER_NAME = "flask-eks-pipeline-cluster"
         IMAGE_TAG    = ""
     }
