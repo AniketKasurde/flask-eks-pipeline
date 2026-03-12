@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION   = "ap-south-1"
-        ECR_REPO     = "<YOUR ACCOUNT ID>.dkr.ecr.ap-south-1.amazonaws.com/flask-eks-pipeline"
+        ECR_REPO     = "760022212905.dkr.ecr.ap-south-1.amazonaws.com/flask-eks-pipeline"
         CLUSTER_NAME = "flask-eks-pipeline-cluster"
         IMAGE_TAG    = ""
     }
@@ -19,8 +19,8 @@ pipeline {
             steps {
                 script {
                     IMAGE_TAG = sh(
-                        script: "git rev-parse --short HEAD",
-                        returnStdout: true
+                        script: "git rev-parse --short HEAD", // returns first 7 characters of commit SHA
+                        returnStdout: true // captures the output as string
                     ).trim()
                     echo "Image tag: ${IMAGE_TAG}"
                 }
