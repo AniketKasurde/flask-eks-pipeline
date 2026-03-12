@@ -6,7 +6,7 @@ terraform {
     }
   }
 
-  #backend using s3 for 
+  #backend using s3 for
   backend "s3" {
     bucket       = "flask-eks-pipeline-tfstate"
     key          = "flask-eks-pipeline/terraform.tfstate"
@@ -22,4 +22,3 @@ terraform {
 provider "aws" {
   region = "ap-south-1"
 }
-
