@@ -42,7 +42,7 @@ chmod +x kubectl
 mv kubectl /usr/local/bin/
 
 # Setup kubeconfig directory for jenkins user
-mkdir -p /var/lib/jenkins/.kube
+mkdir -p /var/lib/jenkins/.kube # jenkins home directory
 chown jenkins:jenkins /var/lib/jenkins/.kube
 
 # Restart Jenkins to pick up docker group membership
