@@ -1,7 +1,9 @@
 import pytest
+
 from app.app import app
 
 
+# creates a fake browser to make HTTP requests
 @pytest.fixture
 def client():
     app.config["TESTING"] = True
